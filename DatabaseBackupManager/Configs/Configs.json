@@ -1,0 +1,62 @@
+{
+    "Databases": [
+        {
+            "Type": "MySql",
+            "Host": "localhost",
+            "DatabaseName": "employees",
+            "Username": "root",
+            "Password": "password"
+        },
+        {
+            "Type": "PostgreSql",
+            "Host": "localhost",
+            "DatabaseName": "my_database_2",
+            "Username": "postgres",
+            "Password": "password456"
+        },
+        {
+            "Type": "MongoDb",
+            "Host": "localhost",
+            "DatabaseName": "my_database_3",
+            "Username": "admin",
+            "Password": "password789"
+        }
+    ],
+    "Storage": [
+        {
+            "Type": "Local",
+            "LocalPath": "/backups"
+        },
+        {
+            "Type": "AWS",
+            "BucketName": "my-backup-bucket",
+            "AccessKey": "your-access-key",
+            "SecretKey": "your-secret-key"
+        },
+        {
+            "Type": "Azure",
+            "ContainerName": "my-backup-container",
+            "ConnectionString": "your-azure-connection-string"
+        },
+        {
+            "Type": "GoogleCloud",
+            "BucketName": "my-backup-bucket",
+            "CredentialsJson": "path/to/your/google-credentials.json"
+        }
+    ],
+    "Logging": {
+        "MinimumLevel": "Information",
+        "WriteTo": [
+            {
+                "Name": "Console"
+            },
+            {
+                "Name": "File",
+                "Args": {
+                    "path": "logs/backup-log.txt",
+                    "rollingInterval": "Day"
+                }
+            }
+        ]
+    }
+}
