@@ -7,9 +7,15 @@ public class GoogleCloudStorageService : IStorageService
     private readonly StorageClient _storageClient;
     private readonly string _bucketName;
 
-    public GoogleCloudStorageService(StorageClient storageClient, string bucketName)
+    public GoogleCloudStorageService(string credentialsFilePath, string bucketName)
     {
-        _storageClient = storageClient;
+        if (!File.Exists(credentialsFilePath))
+        {
+            throw new FileNotFoundException("Google Cloud credentials file not found.", credentialsFilePath);
+        }
+
+        _storageClient = StorageClient.Create(
+            Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(credentialsFilePath));
         _bucketName = bucketName;
     }
 

@@ -1,6 +1,9 @@
 ﻿using System.Data;
+using Amazon.S3;
+using Azure.Storage.Blobs;
 using DatabaseBackupManager.Configs;
 using Google.Apis.Storage.v1;
+using Google.Cloud.Storage.V1;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -53,43 +56,66 @@ var serviceProvider = new ServiceCollection()
             throw new Exception("Invalid database type selected.");
         }
 
-        var selectedDatabase = databases.FirstOrDefault(db => db.GetValue<string>("Type") == selectedDbType);
-        if (selectedDatabase == null)
+        var selectedDbConfig = dbConfigSection.GetChildren().FirstOrDefault(db => db["Type"] == selectedDbType);
+        if (selectedDbConfig == null)
         {
             throw new Exception($"No database configuration found for type: {selectedDbType}");
         }
 
-        Console.WriteLine($"Selected Database: {selectedDatabase.GetValue<string>("DatabaseName")}");
+        Console.WriteLine($"Selected Database: {selectedDbConfig.GetValue<string>("DatabaseName")}");
 
-        if (selectedDbType == "MySql")
+        return selectedDbType switch
         {
-            return new MySqlConnectionService(
-                selectedDatabase.GetValue<string>("Host") ?? throw new Exception("Host is not configured"),
-                selectedDatabase.GetValue<string>("DatabaseName") ?? throw new Exception("DatabaseName is not configured"),
-                selectedDatabase.GetValue<string>("Username") ?? throw new Exception("Username is not configured"),
-                selectedDatabase.GetValue<string>("Password") ?? throw new Exception("Password is not configured")
-            );
-        }
-        else if (selectedDbType == "PostgreSql")
+            "MySql" => new MySqlConnectionService(
+                selectedDbConfig["Host"], selectedDbConfig["DatabaseName"], selectedDbConfig["Username"], selectedDbConfig["Password"]),
+            "PostgreSql" => new PostgreSqlConnectionService(
+                selectedDbConfig["Host"], selectedDbConfig["DatabaseName"], selectedDbConfig["Username"], selectedDbConfig["Password"]),
+            "MongoDb" => new MongoDbConnectionService(
+                $"mongodb://{selectedDbConfig["Username"]}:{selectedDbConfig["Password"]}@{selectedDbConfig["Host"]}", selectedDbConfig["DatabaseName"]),
+            _ => throw new Exception("Unsupported database type."),
+        };
+    })
+    .AddSingleton<IStorageService>(sp =>
+    {
+        var storageConfigSection = configuration.GetSection("Storage");
+        var storageType = storageConfigSection.GetValue<string>("Type");
+
+        Console.WriteLine("Available storage types:");
+        var storageTypes = storageConfigSection.GetChildren().Select(db => db.GetValue<string>("Type")).Distinct().ToList();
+        foreach (var stType in storageTypes)
         {
-            return new PostgreSqlConnectionService(
-                selectedDatabase.GetValue<string>("Host") ?? throw new Exception("Host is not configured"),
-                selectedDatabase.GetValue<string>("DatabaseName") ?? throw new Exception("DatabaseName is not configured"),
-                selectedDatabase.GetValue<string>("Username") ?? throw new Exception("Username is not configured"),
-                selectedDatabase.GetValue<string>("Password") ?? throw new Exception("Password is not configured")
-            );
+            Console.WriteLine($"- {stType}");
         }
-        else if (selectedDbType == "MongoDb")
+        Console.WriteLine("Select a storage type: ");
+        string selectedStorageType = Console.ReadLine()?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(selectedStorageType) || !storageTypes.Contains(selectedStorageType))
         {
-            return new MongoDbConnectionService(
-                $"mongodb://{selectedDatabase.GetValue<string>("Username")}:{selectedDatabase.GetValue<string>("Password")}@{selectedDatabase.GetValue<string>("Host")}",
-                selectedDatabase.GetValue<string>("DatabaseName") ?? throw new Exception("DatabaseName is not configured")
-            );
+            throw new Exception("Invalid storage type selected.");
         }
-        else
+        return selectedStorageType switch
         {
-            throw new Exception("Unsupported database type.");
-        }
+            "LocalStorage" => new LocalStorageService(),
+
+            "GoogleCloud" =>
+                new GoogleCloudStorageService(
+                    storageConfigSection["CredentialsFilePath"],
+                    storageConfigSection["BucketName"]),
+
+            "AmazonS3" =>
+                new AwsS3StorageService(
+                    new AmazonS3Client(
+                        storageConfigSection["AccessKey"],
+                        storageConfigSection["SecretKey"],
+                        new AmazonS3Config()),
+                    storageConfigSection["BucketName"]),
+
+            "AzureBlob" =>
+                new AzureBlobStorageService(
+                    new BlobServiceClient(storageConfigSection["ConnectionString"]),
+                    storageConfigSection["ContainerName"]),
+
+            _ => throw new Exception("Unsupported storage type."),
+        };
     })
     .BuildServiceProvider();
 
