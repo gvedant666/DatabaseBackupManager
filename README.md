@@ -64,7 +64,7 @@ The architecture follows a small, readable dependency-injection pattern. The mai
 
 ### Component Diagram (Mermaid)
 
-```mermaid
+%% REPLACE the existing Component Diagram (Mermaid) block with this
 classDiagram
     direction LR
     CLI --> CommandLineParser
@@ -74,44 +74,96 @@ classDiagram
     App --> ILoggingService
     App --> INotificationService
 
+    class CommandLineParser {
+        +Parse(args : string[]) : (command:string, configPath:string)
+        +PrintUsage() : void
+    }
+
     class IDatabaseConnection {
         <<interface>>
-        +TestConnection()
-        +Connect()
-        +Disconnect()
-        +Backup(backupFilePath)
-        +Restore(backupFilePath)
+        +TestConnection() : bool
+        +Connect() : void
+        +Disconnect() : void
+        +Backup(sourcePath : string) : string
+        +Restore(backupPath : string) : bool
     }
 
     class IStorageService {
         <<interface>>
-        +SaveBackup(sourceFilePath, destinationPath)
-        +LoadBackup(backupFilePath, destinationPath)
+        +SaveBackup(sourceFilePath : string, destinationPath : string) : bool
+        +LoadBackup(backupFilePath : string, destinationPath : string) : bool
+        +DeleteBackup(backupPath : string) : bool
+        +ListBackups(prefix : string) : List<string>
     }
 
-    class ILoggingService
-    class INotificationService
+    class ILoggingService {
+        <<interface>>
+        +LogInfo(message : string)
+        +LogError(message : string)
+        +LogDebug(message : string)
+    }
+
+    class INotificationService {
+        <<interface>>
+        +SendNotification(message : string) : void
+    }
 
     class MySqlConnectionService {
-        -host
-        -database
-        -username
-        -password
-        +Backup()
-        +Restore()
+        -host : string
+        -database : string
+        -username : string
+        -password : string
+        +TestConnection() : bool
+        +Backup(outputPath : string) : string
+        +Restore(backupPath : string) : bool
     }
 
-    class LocalStorageService
-    class AwsS3StorageService
-    class GoogleCloudStorageService
-    class AzureBlobStorageService
+    class LocalStorageService {
+        +SaveBackup(sourceFilePath : string, destinationPath : string) : bool
+        +LoadBackup(backupFilePath : string, destinationPath : string) : bool
+        +DeleteBackup(backupPath : string) : bool
+        +ListBackups(prefix : string) : List<string>
+    }
+
+    class AwsS3StorageService {
+        +SaveBackup(sourceFilePath : string, destinationPath : string) : bool
+        +LoadBackup(backupFilePath : string, destinationPath : string) : bool
+        +DeleteBackup(backupPath : string) : bool
+        +ListBackups(prefix : string) : List<string>
+    }
+
+    class GoogleCloudStorageService {
+        +SaveBackup(sourceFilePath : string, destinationPath : string) : bool
+        +LoadBackup(backupFilePath : string, destinationPath : string) : bool
+        +DeleteBackup(backupPath : string) : bool
+        +ListBackups(prefix : string) : List<string>
+    }
+
+    class AzureBlobStorageService {
+        +SaveBackup(sourceFilePath : string, destinationPath : string) : bool
+        +LoadBackup(backupFilePath : string, destinationPath : string) : bool
+        +DeleteBackup(backupPath : string) : bool
+        +ListBackups(prefix : string) : List<string>
+    }
+
+    class SerilogLoggingService {
+        +LogInfo(message : string)
+        +LogError(message : string)
+        +LogDebug(message : string)
+    }
+
+    class SlackNotificationService {
+        +SendNotification(message : string) : void
+    }
 
     IDatabaseConnection <|-- MySqlConnectionService
     IStorageService <|-- LocalStorageService
     IStorageService <|-- AwsS3StorageService
     IStorageService <|-- GoogleCloudStorageService
     IStorageService <|-- AzureBlobStorageService
-```
+    ILoggingService <|-- SerilogLoggingService
+    INotificationService <|-- SlackNotificationService
+
 
 ### Sequence Diagram (Mermaid)
 
