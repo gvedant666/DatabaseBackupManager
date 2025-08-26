@@ -2,8 +2,6 @@
 
 **DatabaseBackupManager** is a configurable command-line tool for creating and restoring database backups and storing them in various storage providers (local disk, Amazon S3, Google Cloud Storage, Azure Blob Storage).
 
-This README is written as a detailed report-style document: it explains architecture, configuration, usage, deployment, extension points, and maintenance notes. It includes an architecture diagram (Mermaid) that can be rendered on GitHub.
-
 ---
 
 ## Table of Contents
@@ -221,7 +219,7 @@ sequenceDiagram
 
 * [.NET SDK (7.0+ recommended)](https://dotnet.microsoft.com/)
 * The database client tools for the corresponding backend on the machine where the CLI runs. For MySQL, `mysqldump` and `mysql` must be present and available on PATH.
-* (Optional) Cloud provider credentials for AWS / GCP / Azure to enable remote storage providers.
+* Cloud provider credentials for AWS / GCP / Azure to enable remote storage providers (Optional).
 
   * AWS: Access Key / Secret Key or instance IAM role.
   * GCP: Service Account JSON key file.
@@ -410,7 +408,7 @@ WantedBy=multi-user.target
 ## Suggested Future Improvements
 
 * Add automatic non-interactive run mode with `--db-index` and `--storage-index` flags.
-* Add more database drivers (Postgres, MongoDB) implemented similarly to MySQL.
+* Add more database drivers implemented similarly to MySQL.
 * Add a retention/rotation feature (delete old backups from storage based on age or count).
 * Add encryption of backup files before uploading.
 * Add integration tests and unit tests.
@@ -431,7 +429,7 @@ Guidelines:
 
 ## License
 
-This project is provided under the MIT License. (If you want a different license, update this section.)
+This project is provided under the MIT License.
 
 ---
 
@@ -440,5 +438,3 @@ This project is provided under the MIT License. (If you want a different license
 If you'd like to discuss this project or report issues, open a GitHub issue or contact the maintainer listed in the repository.
 
 ---
-
-*Generated README for `DatabaseBackupManager`. This document includes actionable instructions, diagrams and notes to help maintainers and users run and extend the project.*
