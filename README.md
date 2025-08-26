@@ -64,7 +64,7 @@ The architecture follows a small, readable dependency-injection pattern. The mai
 
 ### Component Diagram (Mermaid)
 
-%% REPLACE the existing Component Diagram (Mermaid) block with this
+```mermaid
 classDiagram
     direction LR
     CLI --> CommandLineParser
@@ -163,7 +163,7 @@ classDiagram
     IStorageService <|-- AzureBlobStorageService
     ILoggingService <|-- SerilogLoggingService
     INotificationService <|-- SlackNotificationService
-
+```
 
 ### Sequence Diagram (Mermaid)
 
@@ -178,16 +178,19 @@ sequenceDiagram
     participant Logger
     participant Notifier
 
-    User->>CLI: run `DatabaseBackupManager backup --config config.json`
+    User->>CLI: run DatabaseBackupManager backup --config config.json
     CLI->>Parser: parse args
-    Parser->>App: provide command + config
-    App->>Logger: Log "Starting backup"
-    App->>DB: Connect(); Backup(backupFilePath); Disconnect()
-    DB-->>App: backup file created (local path)
+    Parser->>App: provide command and config
+    App->>Logger: log "Starting backup"
+    App->>DB: Connect
+    DB-->>App: Connection OK
+    App->>DB: Backup
+    DB-->>App: Backup file created (local path)
+    App->>DB: Disconnect
     App->>Storage: SaveBackup(localPath, destPath)
-    Storage-->>App: saved
-    App->>Logger: Log "Completed"
-    App->>Notifier: SendNotification("Backup completed")
+    Storage-->>App: Saved
+    App->>Logger: log "Completed"
+    App->>Notifier: SendNotification "Backup completed"
     Notifier-->>User: Slack message
 ```
 
